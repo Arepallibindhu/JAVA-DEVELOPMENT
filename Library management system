@@ -1,0 +1,201 @@
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.util.HashMap;
+import java.util.Map;
+
+public class LibraryApplet extends JApplet {
+    private JTextArea textArea;
+    private JButton addBookButton, searchBookButton, addUserButton, searchUserButton, borrowBookButton, returnBookButton;
+    private Map<String, Book> bookCatalog = new HashMap<>();
+    private Map<String, User> userCatalog = new HashMap<>();
+    private Map<String, BorrowingRecord> borrowingRecords = new HashMap<>();
+    
+    @Override
+    public void init() {
+        // Initialize UI components
+        setLayout(new BorderLayout());
+        
+        textArea = new JTextArea();
+        textArea.setEditable(false);
+        add(new JScrollPane(textArea), BorderLayout.CENTER);
+        
+        JPanel panel = new JPanel();
+        add(panel, BorderLayout.SOUTH);
+        
+        addBookButton = new JButton("Add Book");
+        searchBookButton = new JButton("Search Book");
+        addUserButton = new JButton("Add User");
+        searchUserButton = new JButton("Search User");
+        borrowBookButton = new JButton("Borrow Book");
+        returnBookButton = new JButton("Return Book");
+        
+        panel.add(addBookButton);
+        panel.add(searchBookButton);
+        panel.add(addUserButton);
+        panel.add(searchUserButton);
+        panel.add(borrowBookButton);
+        panel.add(returnBookButton);
+        
+        addBookButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addBook();
+            }
+        });
+        
+        searchBookButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                searchBook();
+            }
+        });
+        
+        addUserButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addUser();
+            }
+        });
+        
+        searchUserButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                searchUser();
+            }
+        });
+        
+        borrowBookButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                borrowBook();
+            }
+        });
+        
+        returnBookButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                returnBook();
+            }
+        });
+    }
+    
+    // Book management
+    private void addBook() {
+        String bookID = JOptionPane.showInputDialog("Enter Book ID:");
+        String title = JOptionPane.showInputDialog("Enter Book Title:");
+        String author = JOptionPane.showInputDialog("Enter Book Author:");
+        
+        Book book = new Book(bookID, title, author);
+        bookCatalog.put(bookID, book);
+        textArea.append("Added Book - ID: " + bookID + ", Title: " + title + ", Author: " + author + "\n");
+    }
+    
+    private void searchBook() {
+        String bookID = JOptionPane.showInputDialog("Enter Book ID to Search:");
+        Book book = bookCatalog.get(bookID);
+        if (book != null) {
+            textArea.append("Found Book - ID: " + book.getBookID() + ", Title: " + book.getTitle() + ", Author: " + book.getAuthor() + "\n");
+        } else {
+            textArea.append("Book with ID " + bookID + " not found.\n");
+        }
+    }
+    
+    // User management
+    private void addUser() {
+        String userID = JOptionPane.showInputDialog("Enter User ID:");
+        String name = JOptionPane.showInputDialog("Enter User Name:");
+        
+        User user = new User(userID, name);
+        userCatalog.put(userID, user);
+        textArea.append("Added User - ID: " + userID + ", Name: " + name + "\n");
+    }
+    
+    private void searchUser() {
+        String userID = JOptionPane.showInputDialog("Enter User ID to Search:");
+        User user = userCatalog.get(userID);
+        if (user != null) {
+            textArea.append("Found User - ID: " + user.getUserID() + ", Name: " + user.getName() + "\n");
+        } else {
+            textArea.append("User with ID " + userID + " not found.\n");
+        }
+    }
+    
+    // Borrowing management
+    private void borrowBook() {
+        String userID = JOptionPane.showInputDialog("Enter User ID:");
+        String bookID = JOptionPane.showInputDialog("Enter Book ID:");
+        String borrowDate = JOptionPane.showInputDialog("Enter Borrow Date:");
+        
+        if (userCatalog.containsKey(userID) && bookCatalog.containsKey(bookID)) {
+            BorrowingRecord record = new BorrowingRecord(userID, bookID, borrowDate, null);
+            borrowingRecords.put(userID + "_" + bookID, record);
+            textArea.append("User " + userID + " borrowed Book " + bookID + " on " + borrowDate + "\n");
+        } else {
+            textArea.append("Invalid User ID or Book ID.\n");
+        }
+    }
+    
+    private void returnBook() {
+        String userID = JOptionPane.showInputDialog("Enter User ID:");
+        String bookID = JOptionPane.showInputDialog("Enter Book ID:");
+        String returnDate = JOptionPane.showInputDialog("Enter Return Date:");
+        
+        String key = userID + "_" + bookID;
+        BorrowingRecord record = borrowingRecords.get(key);
+        if (record != null) {
+            record.setReturnDate(returnDate);
+            textArea.append("User " + userID + " returned Book " + bookID + " on " + returnDate + "\n");
+        } else {
+            textArea.append("No borrowing record found for User " + userID + " and Book " + bookID + ".\n");
+        }
+    }
+    
+    // Book class
+    private class Book {
+        private String bookID;
+        private String title;
+        private String author;
+
+        public Book(String bookID, String title, String author) {
+            this.bookID = bookID;
+            this.title = title;
+            this.author = author;
+        }
+
+        public String getBookID() { return bookID; }
+        public String getTitle() { return title; }
+        public String getAuthor() { return author; }
+    }
+    
+    // User class
+    private class User {
+        private String userID;
+        private String name;
+
+        public User(String userID, String name) {
+            this.userID = userID;
+            this.name = name;
+        }
+
+        public String getUserID() { return userID; }
+        public String getName() { return name; }
+    }
+    
+    // BorrowingRecord class
+    private class BorrowingRecord {
+        private String userID;
+        private String bookID;
+        private String borrowDate;
+        private String returnDate;
+
+        public BorrowingRecord(String userID, String bookID, String borrowDate, String returnDate) {
+            this.userID = userID;
+            this.bookID = bookID;
+            this.borrowDate = borrowDate;
+            this.returnDate = returnDate;
+        }
+
+        public void setReturnDate(String returnDate) { this.returnDate = returnDate; }
+    }
+}
